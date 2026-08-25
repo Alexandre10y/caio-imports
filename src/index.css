@@ -695,6 +695,10 @@ a {
   background: var(--marquee-bg);
 }
 
+.marquee__scroll {
+  will-change: transform;
+}
+
 .marquee__track {
   display: flex;
   gap: 28px;
@@ -718,6 +722,157 @@ a {
   to {
     transform: translateX(-33.333%);
   }
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  height: 2px;
+  transform-origin: 0% 50%;
+  background: linear-gradient(90deg, var(--volt), #4dffb0 55%, #245cff);
+  pointer-events: none;
+}
+
+.drop-rail {
+  position: relative;
+  /* Fallback; a altura real é definida em JS conforme a largura da trilha. */
+  height: 150vh;
+}
+
+.drop-rail--static {
+  height: auto;
+  padding: 48px clamp(16px, 4vw, 48px) 24px;
+}
+
+.drop-rail__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(18px, 3vh, 32px);
+  padding: 96px clamp(16px, 3vw, 40px) 40px;
+  overflow: hidden;
+}
+
+.drop-rail__intro {
+  max-width: min(40rem, 92vw);
+}
+
+.drop-rail__hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.drop-rail__track,
+.drop-rail__static-track {
+  display: flex;
+  gap: clamp(14px, 1.4vw, 22px);
+  width: max-content;
+  will-change: transform;
+}
+
+.drop-rail__static-track {
+  width: auto;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.drop-rail__card {
+  position: relative;
+  /* Em ultrawide: cards um pouco mais largos e densos para cobrir o vão. */
+  flex: 0 0 clamp(240px, 18vw, 360px);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--volt) 8%, transparent), transparent 42%),
+    var(--panel);
+  text-decoration: none;
+  color: inherit;
+  scroll-snap-align: start;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.drop-rail__card:hover {
+  border-color: color-mix(in srgb, var(--volt) 55%, var(--line));
+  transform: translateY(-4px);
+}
+
+.drop-rail__index {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 1;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.08em;
+  color: var(--volt);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+
+.drop-rail__media {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.drop-rail__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.drop-rail__card:hover .drop-rail__media img {
+  transform: scale(1.05);
+}
+
+.drop-rail__meta {
+  display: grid;
+  gap: 2px;
+}
+
+.drop-rail__meta small {
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.drop-rail__meta strong {
+  font-family: Syne, sans-serif;
+  font-size: 1.05rem;
+}
+
+.drop-rail__meta em {
+  font-style: normal;
+  color: var(--volt);
+  font-weight: 600;
+}
+
+.drop-rail__meter {
+  height: 2px;
+  width: min(280px, 40vw);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.drop-rail__meter span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: 0 50%;
+  background: var(--volt);
 }
 
 .vitrine,

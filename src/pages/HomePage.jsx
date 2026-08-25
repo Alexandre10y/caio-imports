@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import DropRail from '../components/DropRail'
 import Guarantee from '../components/Guarantee'
 import Hero from '../components/Hero'
 import ProductShowcase from '../components/ProductShowcase'
@@ -17,6 +18,7 @@ export default function HomePage({ products, modality, brand, onModalityChange, 
   return (
     <main>
       <Hero />
+      <DropRail products={products} />
       <ProductShowcase
         products={products}
         modality={modality}

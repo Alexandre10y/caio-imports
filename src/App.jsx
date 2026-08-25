@@ -3,6 +3,7 @@ import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Drawer from './components/Drawer'
 import Footer from './components/Footer'
 import Header from './components/Header'
+import ScrollProgress from './components/bits/ScrollProgress'
 import { useCatalog } from './hooks/useCatalog'
 import { useTheme } from './hooks/useTheme'
 import HomePage from './pages/HomePage'
@@ -58,6 +59,7 @@ function Storefront() {
 
   return (
     <div className="app-shell">
+      <ScrollProgress />
       <div className="grain" aria-hidden="true" />
       <Header
         drawerOpen={drawerOpen}

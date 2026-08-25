@@ -1,0 +1,29 @@
+---
+description: Separação clara do que o lojista edita no painel vs o que fica fixo no código (design, motion, UI)
+alwaysApply: true
+---
+
+# Conteúdo editável vs experiência fixa
+
+## O lojista edita (painel `/admin`)
+
+- Produtos: modelo, marca, modalidade, preços, estoque, descrição, specs, numeração, cores, fotos
+- Vendas e indicadores
+- Textos de seções: hero, vitrine, guia, garantia, footer, contato (WhatsApp/Instagram)
+- Ativar/desativar e destacar produtos
+
+## Fica fixo no código (alteração só pela empresa)
+
+- Layout, tipografia, paleta, atmosfera visual
+- Animações e interações (Motion / Framer Motion, React Bits, componentes 21st.dev)
+- Microinterações, hover, scroll, hero cinematográfico, transições de página
+- Estrutura das seções, navegação, tema claro/escuro (comportamento), CSP e segurança
+- Skills de design (UI UX Pro Max) e componentes instalados via 21st — não viram campos no CMS
+
+## Stack de experiência (uso em conjunto)
+
+1. **UI UX Pro Max** — direção de design, paletas, tipografia, guidelines (skill local)
+2. **21st.dev** — componentes React/Tailwind curados (MCP/CLI)
+3. **Motion (`motion/react`)** — animações e gestos (sucessor do Framer Motion; já no projeto)
+
+Não expor controles de animação/layout no painel do lojista. Se ele pedir mudança visual, a empresa ajusta o código.

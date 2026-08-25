@@ -1,9 +1,18 @@
+import { useRef } from 'react'
 import { ArrowDownRight } from 'lucide-react'
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'motion/react'
 import { useCatalog } from '../hooks/useCatalog'
 import { useTheme } from '../hooks/useTheme'
 import Aurora from './bits/Aurora'
 import BlurText from './bits/BlurText'
 import DecryptedText from './bits/DecryptedText'
+import Magnet from './bits/Magnet'
 import TiltCard from './bits/TiltCard'
 
 const HERO_SHOTS = [
@@ -29,8 +38,22 @@ export default function Hero() {
   const auroraStops =
     theme === 'light' ? ['#8FBF00', '#2BBF8A', '#3B6BFF'] : ['#C8FF00', '#4DFFB0', '#245CFF']
 
+  const reduceMotion = useReducedMotion()
+  const sectionRef = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  })
+
+  const stackY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : 120])
+  const stackRotate = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : -4])
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : 48])
+  const copyOpacity = useTransform(scrollYProgress, [0, 0.7], [1, reduceMotion ? 1 : 0.35])
+  const marqueeX = useTransform(scrollYProgress, [0, 1], ['0%', reduceMotion ? '0%' : '-22%'])
+  const smoothMarqueeX = useSpring(marqueeX, { stiffness: 60, damping: 24 })
+
   return (
-    <section className="hero" id="topo">
+    <section className="hero" id="topo" ref={sectionRef}>
       <div className="hero__aurora" aria-hidden="true">
         <Aurora
           key={theme}
@@ -43,7 +66,7 @@ export default function Hero() {
       <div className="hero__veil" aria-hidden="true" />
 
       <div className="hero__grid flex flex-col lg:flex-row lg:items-start gap-8">
-        <div className="hero__copy">
+        <motion.div className="hero__copy" style={{ y: copyY, opacity: copyOpacity }}>
           <p className="hero__eyebrow">
             <DecryptedText text={copy.eyebrow} sequential speed={22} />
           </p>
@@ -62,35 +85,52 @@ export default function Hero() {
           </h1>
           <p className="hero__lead">{copy.lead}</p>
           <div className="flex flex-wrap items-center gap-4">
-            <a className="cta-volt inline-flex items-center gap-2" href="#vitrine">
-              {copy.ctaLabel}
-              <ArrowDownRight size={18} />
-            </a>
+            <Magnet padding={56} magnetStrength={5} disabled={Boolean(reduceMotion)}>
+              <a className="cta-volt inline-flex items-center gap-2" href="#vitrine">
+                {copy.ctaLabel}
+                <ArrowDownRight size={18} />
+              </a>
+            </Magnet>
             <span className="hero__meta">{copy.meta}</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="hero__stack">
+        <motion.div
+          className="hero__stack"
+          style={{ y: stackY, rotate: stackRotate }}
+        >
           {HERO_SHOTS.map((shot, index) => (
-            <TiltCard key={shot.src} className={`hero-shot hero-shot--${index}`} rotateAmplitude={6} scaleOnHover={1.02}>
+            <TiltCard
+              key={shot.src}
+              className={`hero-shot hero-shot--${index}`}
+              rotateAmplitude={reduceMotion ? 0 : 6}
+              scaleOnHover={reduceMotion ? 1 : 1.02}
+            >
               <img src={shot.src} alt={shot.alt} />
             </TiltCard>
           ))}
-          <div className="hero-badge">
+          <motion.div
+            className="hero-badge"
+            initial={reduceMotion ? false : { scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.55, type: 'spring', stiffness: 220, damping: 16 }}
+          >
             <span>LIVE</span>
             {copy.badge}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       <div className="marquee" aria-hidden="true">
-        <div className="marquee__track">
-          {[...marquee, ...marquee, ...marquee].map((brand, index) => (
-            <span key={`${brand}-${index}`}>
-              {brand} <em>/</em>
-            </span>
-          ))}
-        </div>
+        <motion.div className="marquee__scroll" style={{ x: smoothMarqueeX }}>
+          <div className="marquee__track">
+            {[...marquee, ...marquee, ...marquee, ...marquee].map((brand, index) => (
+              <span key={`${brand}-${index}`}>
+                {brand} <em>/</em>
+              </span>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   )

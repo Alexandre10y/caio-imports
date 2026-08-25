@@ -26,3 +26,6 @@ dist-ssr
 .vercel
 .env*
 !.env.example
+
+# Chave real do 21st MCP nunca versiona (use o exemplo + env API_KEY_21ST)
+.cursor/mcp.local.json

@@ -9,7 +9,22 @@ acompanhar o resultado e editar os textos do site.
 - **React 19 + Vite** — SPA com React Router
 - **Tailwind CSS** + CSS custom properties para o tema claro/escuro
 - **Supabase** — Postgres, autenticação por e-mail/senha e storage das fotos
-- **Lucide** para ícones e animações próprias inspiradas em React Bits
+- **Lucide** para ícones
+- **Motion** (`motion/react`) — sucessor do Framer Motion; animações e gestos
+- **UI UX Pro Max** — skill de design no Cursor (paletas, tipografia, guidelines)
+- **21st.dev** — catálogo de componentes React/Tailwind via CLI + MCP
+- Animações próprias inspiradas em React Bits (Aurora, BlurText, TiltCard, etc.)
+
+### O que o lojista edita vs o que fica fixo
+
+| Editável no painel `/admin` | Fixo no código (só a empresa altera) |
+| --- | --- |
+| Produtos, fotos, estoque, preços | Layout, tipografia, paleta e atmosfera |
+| Textos de hero, guia, garantia, footer | Animações, motion, microinterações |
+| Contato (WhatsApp / Instagram) | Componentes 21st.dev e skills de UI |
+| Vendas e monitoramento | Tema/comportamento visual e segurança |
+
+Mudança de animação ou “cara” do site = solicitação à empresa que desenvolveu o sistema.
 
 ## Rodando localmente
 
@@ -28,9 +43,11 @@ catálogo local de reserva, mas o painel exibe aviso de indisponibilidade.
 | --- | --- |
 | `VITE_SUPABASE_URL` | URL da API do projeto Supabase |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave publicável (segura no navegador) |
+| `API_KEY_21ST` | Chave do MCP/CLI 21st.dev (só no ambiente do desenvolvedor; não vai no Vite) |
 
 A `service_role` key **nunca** deve entrar neste repositório nem no bundle do frontend.
 O que protege os dados é o Row Level Security, não o segredo da chave.
+A `API_KEY_21ST` também **nunca** sobe no Git — fica no ambiente do Windows / Cursor.
 
 ## Estrutura
 
