@@ -1,0 +1,70 @@
+# CAIO IMPORTS
+
+Loja de chuteiras importadas (society, campo e futsal) com vitrine que fecha a venda pelo
+WhatsApp e um painel de gestão para o lojista cadastrar produtos, registrar vendas,
+acompanhar o resultado e editar os textos do site.
+
+## Stack
+
+- **React 19 + Vite** — SPA com React Router
+- **Tailwind CSS** + CSS custom properties para o tema claro/escuro
+- **Supabase** — Postgres, autenticação por e-mail/senha e storage das fotos
+- **Lucide** para ícones e animações próprias inspiradas em React Bits
+
+## Rodando localmente
+
+```bash
+npm install
+cp .env.example .env.local   # preencha com as credenciais do seu projeto Supabase
+npm run dev
+```
+
+O painel fica em `/admin`. Sem as variáveis de ambiente o site continua abrindo, usando um
+catálogo local de reserva, mas o painel exibe aviso de indisponibilidade.
+
+### Variáveis de ambiente
+
+| Variável | Descrição |
+| --- | --- |
+| `VITE_SUPABASE_URL` | URL da API do projeto Supabase |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave publicável (segura no navegador) |
+
+A `service_role` key **nunca** deve entrar neste repositório nem no bundle do frontend.
+O que protege os dados é o Row Level Security, não o segredo da chave.
+
+## Estrutura
+
+```
+src/
+  admin/          painel: dashboard, produtos, vendas, conteúdo
+  components/     vitrine, cabeçalho, cards, animações
+  hooks/          sessão (useAuth), catálogo (useCatalog), tema (useTheme)
+  lib/            client do Supabase, consultas e formatação
+  pages/          home e página do produto
+```
+
+## Banco de dados
+
+| Tabela | Função |
+| --- | --- |
+| `products` | catálogo: preço, custo, estoque, especificações, numerações, cores |
+| `product_images` | galeria de ângulos, ordenada; a primeira foto é a capa |
+| `sales` | vendas lançadas manualmente, com total e lucro calculados pelo Postgres |
+| `site_content` | textos editáveis de cada seção da loja |
+| `product_events` | cliques no WhatsApp e visitas, para o painel de interesse |
+| `admins` | quem tem acesso ao painel |
+
+### Segurança
+
+- RLS ativo em todas as tabelas. O visitante anônimo só lê o catálogo ativo e os textos
+  do site, e só pode inserir eventos de interesse — não existe caminho de escrita.
+- Vendas, clientes e administradores são legíveis apenas por quem está em `admins`.
+- A verificação de permissão vive em um schema `private`, fora da API pública.
+- O acesso ao painel é concedido por uma allowlist de e-mails: criar uma conta não dá
+  acesso a nada por si só.
+
+## Deploy
+
+Hospedado na Vercel. O build é `npm run build` e a saída é `dist/`. O `vercel.json` cuida
+do roteamento da SPA, do cache dos assets e dos cabeçalhos de segurança (HSTS, CSP,
+proteção contra clickjacking e sniffing).
