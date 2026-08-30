@@ -2,8 +2,8 @@
 // Usado como fallback quando o banco ainda não respondeu ou está indisponível.
 export const DEFAULT_CONTENT = {
   contact: {
-    whatsapp: '5511999999999',
-    instagram: 'https://www.instagram.com/caioimports/',
+    whatsapp: '554284323185',
+    instagram: 'https://www.instagram.com/caioimportsoficial/',
   },
   hero: {
     eyebrow: 'DROP 01 · IMPORT ORIGINAL',
@@ -56,7 +56,7 @@ export const DEFAULT_CONTENT = {
     kicker: 'Social proof',
     title: 'Compre com confiança',
     text: 'Somos uma loja comprometida com nossos clientes, confira nossos feedbacks, pedidos e novidades no Instagram.',
-    copyright: 'CAIO IMPORTS',
+    copyright: 'CAIO IMPORTS OFICIAL',
     tagline: 'Society · Campo · Futsal',
   },
 }

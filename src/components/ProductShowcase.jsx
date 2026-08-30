@@ -49,6 +49,13 @@ export default function ProductShowcase({
           </button>
         ))}
         <span className="chip-divider" />
+        <button
+          type="button"
+          className={`chip chip--ghost ${brand === 'all' ? 'is-active' : ''}`}
+          onClick={() => onBrandChange('all')}
+        >
+          Todas
+        </button>
         {brands.map((item) => (
           <button
             key={item}

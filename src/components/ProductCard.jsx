@@ -21,8 +21,6 @@ export default function ProductCard({ product, index, featured = false }) {
     [color?.name, product.model, size, whatsapp],
   )
 
-  const lastUnits = product.stock > 0 && product.stock <= 2
-
   return (
     <article className={`product-card ${featured ? 'is-featured' : ''}`}>
       <Link to={`/chuteira/${product.id}`} className="product-card__media" aria-label={`Ver ${product.model}`}>
@@ -42,10 +40,7 @@ export default function ProductCard({ product, index, featured = false }) {
       <div className="product-card__body flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="product-card__index">
-              {String(index + 1).padStart(2, '0')} / DROP
-              {lastUnits ? <em className="product-card__flag">Últimas unidades</em> : null}
-            </p>
+            <p className="product-card__index">{String(index + 1).padStart(2, '0')} / DROP</p>
             <h3>
               <Link to={`/chuteira/${product.id}`}>{product.model}</Link>
             </h3>

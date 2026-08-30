@@ -10,7 +10,7 @@ export default function Footer() {
   return (
     <footer className="site-footer" id="social">
       <div className="site-footer__top flex flex-col lg:flex-row lg:items-end justify-between gap-10">
-        <div>
+        <div className="site-footer__copy">
           <p className="kicker">{copy.kicker}</p>
           <h2>{copy.title}</h2>
           <p>{copy.text}</p>
@@ -21,7 +21,7 @@ export default function Footer() {
           href={instagram}
           target="_blank"
           rel="noreferrer"
-          aria-label="Abrir Instagram da CAIO IMPORTS"
+          aria-label="Abrir Instagram da CAIO IMPORTS Oficial"
         >
           <span className="ig-orb__ring" />
           <span className="ig-orb__ring ig-orb__ring--delayed" />
