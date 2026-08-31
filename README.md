@@ -85,3 +85,25 @@ src/
 Hospedado na Vercel. O build é `npm run build` e a saída é `dist/`. O `vercel.json` cuida
 do roteamento da SPA, do cache dos assets e dos cabeçalhos de segurança (HSTS, CSP,
 proteção contra clickjacking e sniffing).
+
+### Manter o Supabase ativo (plano Free)
+
+Projetos Free do Supabase podem ser **pausados após ~7 dias sem consultas ao banco**.
+Para evitar isso, há um cron diário na Vercel que chama `/api/keepalive` e faz uma
+leitura leve em `site_content`.
+
+Configure na Vercel (Settings → Environment Variables):
+
+| Variável | Descrição |
+| --- | --- |
+| `CRON_SECRET` | Token secreto; a Vercel envia `Authorization: Bearer …` no cron |
+| `SUPABASE_URL` | Mesma URL do projeto (pode repetir `VITE_SUPABASE_URL`) |
+| `SUPABASE_PUBLISHABLE_KEY` | Mesma chave publicável do frontend |
+
+Teste manual (substitua o token):
+
+```bash
+curl -H "Authorization: Bearer SEU_CRON_SECRET" https://caio-imports.vercel.app/api/keepalive
+```
+
+Resposta esperada: `{"ok":true,"rows":…,"at":"…"}`. O agendamento padrão é **todo dia às 09:00 UTC** (~06:00 em Brasília).
