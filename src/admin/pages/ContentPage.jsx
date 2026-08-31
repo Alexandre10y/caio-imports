@@ -1,8 +1,16 @@
-import { Plus, Save, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ImagePlus, Plus, Save, Trash2, Upload } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useCatalog } from '../../hooks/useCatalog'
 import { saveSiteContent } from '../../lib/catalog'
+import { DEFAULT_CONTENT } from '../../lib/defaultContent'
+import { uploadProductImage } from '../api'
 import { Feedback, Field, Panel } from '../components/ui'
+
+const HERO_SHOT_SLOTS = [
+  { label: 'Foto principal (topo esquerdo)', hint: 'Primeira imagem que o cliente vê no collage.' },
+  { label: 'Foto do meio (direita)', hint: 'Segunda camada do collage.' },
+  { label: 'Foto de baixo', hint: 'Terceira camada — costuma ser um close ou detalhe.' },
+]
 
 const SECTIONS = [
   {
@@ -21,7 +29,7 @@ const SECTIONS = [
   {
     key: 'hero',
     title: 'Abertura do site',
-    description: 'Primeira tela que o cliente vê.',
+    description: 'Primeira tela que o cliente vê — textos e as três fotos do collage.',
     fields: [
       { name: 'eyebrow', label: 'Linha de cima' },
       { name: 'title', label: 'Título' },
@@ -31,6 +39,7 @@ const SECTIONS = [
       { name: 'meta', label: 'Aviso ao lado do botão' },
       { name: 'badge', label: 'Selo sobre as fotos' },
     ],
+    shots: true,
   },
   {
     key: 'showcase',
@@ -85,16 +94,28 @@ const SECTIONS = [
   },
 ]
 
+function normalizeHeroShots(shots) {
+  const defaults = DEFAULT_CONTENT.hero.shots ?? []
+  return HERO_SHOT_SLOTS.map((_, index) => ({
+    src: shots?.[index]?.src ?? defaults[index]?.src ?? '',
+    alt: shots?.[index]?.alt ?? defaults[index]?.alt ?? '',
+  }))
+}
+
 function SectionForm({ section, initial, onSaved }) {
   const [values, setValues] = useState(initial)
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState(null)
+  const [uploadingIndex, setUploadingIndex] = useState(null)
+  const [pendingUploadIndex, setPendingUploadIndex] = useState(0)
+  const shotFileInput = useRef(null)
 
   useEffect(() => {
-    setValues(initial)
-  }, [initial])
+    setValues(section.shots ? { ...initial, shots: normalizeHeroShots(initial.shots) } : initial)
+  }, [initial, section.shots])
 
   const items = Array.isArray(values.items) ? values.items : []
+  const heroShots = section.shots ? normalizeHeroShots(values.shots) : []
 
   function patch(next) {
     setValues((current) => ({ ...current, ...next }))
@@ -106,12 +127,47 @@ function SectionForm({ section, initial, onSaved }) {
     patch({ items: list })
   }
 
+  function patchHeroShot(index, next) {
+    const list = normalizeHeroShots(values.shots)
+    list[index] = { ...list[index], ...next }
+    patch({ shots: list })
+  }
+
+  function triggerHeroUpload(index) {
+    setPendingUploadIndex(index)
+    shotFileInput.current?.click()
+  }
+
+  async function handleHeroUpload(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    setUploadingIndex(pendingUploadIndex)
+    setFeedback(null)
+    try {
+      const result = await uploadProductImage(file, 'hero')
+      patchHeroShot(pendingUploadIndex, { src: result.url })
+      setFeedback({
+        type: 'success',
+        message: `Foto ${pendingUploadIndex + 1} enviada e otimizada. Clique em Publicar para aparecer no site.`,
+      })
+    } catch (error) {
+      setFeedback({ type: 'error', message: `Falha no upload: ${error.message}` })
+    } finally {
+      setUploadingIndex(null)
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     setSaving(true)
     setFeedback(null)
     try {
-      await saveSiteContent(section.key, values)
+      const payload = section.shots
+        ? { ...values, shots: normalizeHeroShots(values.shots) }
+        : values
+      await saveSiteContent(section.key, payload)
       await onSaved()
       setFeedback({ type: 'success', message: 'Publicado no site.' })
     } catch (error) {
@@ -145,6 +201,65 @@ function SectionForm({ section, initial, onSaved }) {
             ),
           )}
         </div>
+
+        {section.shots ? (
+          <div className="ad-repeater">
+            <input
+              ref={shotFileInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif"
+              hidden
+              onChange={handleHeroUpload}
+            />
+            <p className="ad-field__label">Fotos de abertura</p>
+            <p className="ad-field__hint">
+              Três fotos de chuteiras no collage da primeira tela. Prefira enviar do celular ou
+              computador — ficam salvas na nuvem da loja. Também pode colar um link externo.
+            </p>
+            <div className="ad-images">
+              {heroShots.map((shot, index) => (
+                <div key={index} className="ad-image-row ad-image-row--stacked">
+                  <div className="ad-image-row__thumb">
+                    {shot.src ? (
+                      <img src={shot.src} alt="" loading="lazy" />
+                    ) : (
+                      <ImagePlus size={18} />
+                    )}
+                  </div>
+                  <div className="ad-image-row__fields ad-image-row__fields--stacked">
+                    <p className="ad-field__label">{HERO_SHOT_SLOTS[index].label}</p>
+                    {HERO_SHOT_SLOTS[index].hint ? (
+                      <p className="ad-field__hint">{HERO_SHOT_SLOTS[index].hint}</p>
+                    ) : null}
+                    <input
+                      type="url"
+                      value={shot.src}
+                      onChange={(event) => patchHeroShot(index, { src: event.target.value })}
+                      placeholder="Link da foto ou envie pelo botão ao lado"
+                    />
+                    <input
+                      type="text"
+                      value={shot.alt}
+                      onChange={(event) => patchHeroShot(index, { alt: event.target.value })}
+                      placeholder="Descrição da foto (acessibilidade)"
+                    />
+                  </div>
+                  <div className="ad-image-row__actions">
+                    <button
+                      type="button"
+                      className="ad-btn"
+                      onClick={() => triggerHeroUpload(index)}
+                      disabled={uploadingIndex !== null}
+                    >
+                      <Upload size={15} />
+                      {uploadingIndex === index ? 'Enviando…' : 'Enviar'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {section.items ? (
           <div className="ad-repeater">

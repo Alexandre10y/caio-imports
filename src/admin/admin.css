@@ -850,6 +850,14 @@
   min-width: 220px;
 }
 
+.ad-image-row__fields--stacked {
+  grid-template-columns: 1fr;
+}
+
+.ad-image-row--stacked {
+  align-items: flex-start;
+}
+
 .ad-image-row__actions {
   display: flex;
   align-items: center;

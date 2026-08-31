@@ -13,6 +13,20 @@ export const DEFAULT_CONTENT = {
     ctaLabel: 'Entrar na vitrine',
     meta: '1 mês de garantia · troca após análise',
     badge: 'STOCK IMPORTADO',
+    shots: [
+      {
+        src: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?q=80&w=900',
+        alt: 'Chuteira de campo em close no gramado',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1511886929837-354d827aae26?q=80&w=900',
+        alt: 'Chuteiras Adidas ao lado de bola de futebol',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1571267434388-6a1df2649dce?q=80&w=900',
+        alt: 'Par de chuteiras pretas no campo',
+      },
+    ],
   },
   showcase: {
     kicker: 'Vitrine interativa',

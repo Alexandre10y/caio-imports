@@ -4,6 +4,7 @@ import { useCatalog } from '../hooks/useCatalog'
 import { trackProductEvent } from '../lib/catalog'
 import { buildWhatsAppLink, formatBRL } from '../lib/format'
 import { WhatsAppIcon } from './icons/BrandIcons'
+import ProductImage from './ProductImage'
 
 export default function ProductCard({ product, index, featured = false }) {
   const { whatsapp } = useCatalog()
@@ -25,8 +26,9 @@ export default function ProductCard({ product, index, featured = false }) {
     <article className={`product-card ${featured ? 'is-featured' : ''}`}>
       <Link to={`/chuteira/${product.id}`} className="product-card__media" aria-label={`Ver ${product.model}`}>
         <div className="product-card__visual">
-          <img
+          <ProductImage
             src={product.image}
+            width={featured ? 1200 : 800}
             alt={`${product.brand} ${product.model}`}
             loading={featured ? 'eager' : 'lazy'}
             style={{ filter: color?.filter }}

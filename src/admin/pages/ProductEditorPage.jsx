@@ -5,6 +5,7 @@ import { useCatalog } from '../../hooks/useCatalog'
 import { MODALITIES, SIZE_RANGE } from '../../lib/catalog'
 import { slugify } from '../../lib/format'
 import { fetchProductById, saveProduct, uploadProductImage } from '../api'
+import { formatBytes } from '../../lib/imageOptimize'
 import { Feedback, Field, Panel, Spinner } from '../components/ui'
 
 const EMPTY = {
@@ -124,13 +125,19 @@ export default function ProductEditorPage() {
     try {
       const slug = values.slug || slugify(values.model) || 'novo-produto'
       const uploaded = []
+      let savedBytes = 0
       for (const file of files) {
-        const url = await uploadProductImage(file, slug)
-        uploaded.push({ url, label: IMAGE_LABELS[uploaded.length] ?? 'Detalhe' })
+        const result = await uploadProductImage(file, slug)
+        uploaded.push({ url: result.url, label: IMAGE_LABELS[uploaded.length] ?? 'Detalhe' })
+        savedBytes += Math.max(0, result.originalBytes - result.bytes)
       }
       const existing = values.images.filter((image) => image.url.trim())
       patch({ images: [...existing, ...uploaded] })
-      setFeedback({ type: 'success', message: `${uploaded.length} foto(s) enviada(s).` })
+      const savedLabel = savedBytes > 0 ? ` · ${formatBytes(savedBytes)} a menos por foto` : ''
+      setFeedback({
+        type: 'success',
+        message: `${uploaded.length} foto(s) na nuvem da loja, já otimizadas${savedLabel}.`,
+      })
     } catch (error) {
       setFeedback({ type: 'error', message: `Falha no upload: ${error.message}` })
     } finally {
@@ -422,7 +429,7 @@ export default function ProductEditorPage() {
 
       <Panel
         title="Fotos e ângulos"
-        description="A primeira foto é a capa da vitrine. As demais viram os quadradinhos de ângulo."
+        description="Prefira enviar do celular ou do computador — as fotos ficam salvas na nuvem da loja (Supabase), já redimensionadas para carregar rápido. A primeira foto é a capa."
         actions={
           <>
             <input
@@ -456,7 +463,7 @@ export default function ProductEditorPage() {
                   type="url"
                   value={image.url}
                   onChange={(event) => updateList('images', index, { url: event.target.value })}
-                  placeholder="https://…"
+                  placeholder="Link externo (opcional)"
                 />
                 <input
                   type="text"
@@ -502,7 +509,7 @@ export default function ProductEditorPage() {
           onClick={() => patch({ images: [...values.images, { url: '', label: 'Detalhe' }] })}
         >
           <Plus size={15} />
-          Adicionar foto por link
+          Usar link externo
         </button>
       </Panel>
 

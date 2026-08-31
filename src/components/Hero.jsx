@@ -9,31 +9,29 @@ import {
 } from 'motion/react'
 import { useCatalog } from '../hooks/useCatalog'
 import { useTheme } from '../hooks/useTheme'
+import { DEFAULT_CONTENT } from '../lib/defaultContent'
 import Aurora from './bits/Aurora'
 import BlurText from './bits/BlurText'
 import DecryptedText from './bits/DecryptedText'
 import Magnet from './bits/Magnet'
 import TiltCard from './bits/TiltCard'
 
-const HERO_SHOTS = [
-  {
-    src: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=900',
-    alt: 'Chuteira em close sobre gramado',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1511886929837-354d827aae26?q=80&w=900',
-    alt: 'Chuteiras Adidas ao lado de bola de futebol',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1571267434388-6a1df2649dce?q=80&w=900',
-    alt: 'Par de chuteiras pretas no campo',
-  },
-]
+const HERO_SHOT_COUNT = 3
 
+function resolveHeroShots(hero) {
+  const defaults = DEFAULT_CONTENT.hero.shots ?? []
+  const fromContent = Array.isArray(hero?.shots) ? hero.shots : []
+
+  return Array.from({ length: HERO_SHOT_COUNT }, (_, index) => ({
+    src: fromContent[index]?.src?.trim() || defaults[index]?.src || '',
+    alt: fromContent[index]?.alt?.trim() || defaults[index]?.alt || 'Chuteira',
+  })).filter((shot) => shot.src)
+}
 export default function Hero() {
   const { theme } = useTheme()
   const { brands, content } = useCatalog()
   const copy = content.hero
+  const heroShots = resolveHeroShots(copy)
   const marquee = brands.length > 0 ? brands : ['Adidas', 'Nike', 'Puma']
   const auroraStops =
     theme === 'light' ? ['#8FBF00', '#2BBF8A', '#3B6BFF'] : ['#C8FF00', '#4DFFB0', '#245CFF']
@@ -99,9 +97,9 @@ export default function Hero() {
           className="hero__stack"
           style={{ y: stackY, rotate: stackRotate }}
         >
-          {HERO_SHOTS.map((shot, index) => (
+          {heroShots.map((shot, index) => (
             <TiltCard
-              key={shot.src}
+              key={`${index}-${shot.src}`}
               className={`hero-shot hero-shot--${index}`}
               rotateAmplitude={reduceMotion ? 0 : 6}
               scaleOnHover={reduceMotion ? 1 : 1.02}

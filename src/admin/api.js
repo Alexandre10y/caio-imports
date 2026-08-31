@@ -1,5 +1,6 @@
 import { fetchAllProducts, mapProductRow } from '../lib/catalog'
 import { PRODUCT_BUCKET, supabase } from '../lib/supabase'
+import { optimizeProductImage } from '../lib/imageOptimize'
 
 /* ----------------------------------------------------------------- produtos */
 
@@ -84,17 +85,19 @@ export async function deleteProduct(id) {
 }
 
 export async function uploadProductImage(file, slug) {
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+  const optimized = await optimizeProductImage(file)
+  const extension = optimized.type === 'image/webp' ? 'webp' : optimized.name.split('.').pop()?.toLowerCase() ?? 'jpg'
   const path = `${slug || 'sem-slug'}/${crypto.randomUUID()}.${extension}`
 
-  const { error } = await supabase.storage.from(PRODUCT_BUCKET).upload(path, file, {
+  const { error } = await supabase.storage.from(PRODUCT_BUCKET).upload(path, optimized, {
     cacheControl: '31536000',
     upsert: false,
+    contentType: optimized.type || 'image/jpeg',
   })
   if (error) throw error
 
   const { data } = supabase.storage.from(PRODUCT_BUCKET).getPublicUrl(path)
-  return data.publicUrl
+  return { url: data.publicUrl, bytes: optimized.size, originalBytes: file.size }
 }
 
 /* ------------------------------------------------------------------- vendas */

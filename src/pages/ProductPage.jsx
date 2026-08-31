@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import ProductImage from '../components/ProductImage'
 import { WhatsAppIcon } from '../components/icons/BrandIcons'
 import { useCatalog } from '../hooks/useCatalog'
 import { getSimilar, trackProductEvent } from '../lib/catalog'
@@ -69,14 +70,15 @@ export default function ProductPage() {
                 onClick={() => setActiveIndex(index)}
                 aria-label={`Ver ângulo ${shot.label}`}
               >
-                <img src={shot.src} alt="" loading="lazy" />
+                <ProductImage src={shot.src} width={240} alt="" />
               </button>
             ))}
           </div>
 
           <figure className="pdp-stage">
-            <img
+            <ProductImage
               src={activeImage.src}
+              width={1400}
               alt={`${product.brand} ${product.model} — ${activeImage.label}`}
               style={{ filter: color?.filter }}
             />

@@ -10,6 +10,7 @@ alwaysApply: true
 - Produtos: modelo, marca, modalidade, preços, estoque, descrição, specs, numeração, cores, fotos
 - Vendas e indicadores
 - Textos de seções: hero, vitrine, guia, garantia, footer, contato (WhatsApp/Instagram)
+- Fotos de abertura do site (collage do hero — 3 imagens)
 - Ativar/desativar e destacar produtos
 
 ## Fica fixo no código (alteração só pela empresa)
