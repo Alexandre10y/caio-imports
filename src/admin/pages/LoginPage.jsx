@@ -150,7 +150,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   autoComplete="username"
-                  placeholder="voce@caioimports.com"
+                  placeholder="caioimpors@caioimports.com"
                   required
                 />
               </div>

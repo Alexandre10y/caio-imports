@@ -1,9 +1,9 @@
-const MAX_WIDTH = 1600
+const TARGET_SIZE = 1600
 const QUALITY = 0.82
 
 /**
- * Redimensiona e comprime antes do upload — WebP leve, boa qualidade na vitrine.
- * Experiência fixa da empresa; o lojista só escolhe o arquivo.
+ * Normaliza para quadrado 1600×1600 (contain) e comprime em WebP.
+ * Preserva a chuteira inteira — sem recorte no upload.
  */
 export async function optimizeProductImage(file) {
   if (!file.type.startsWith('image/')) {
@@ -16,20 +16,21 @@ export async function optimizeProductImage(file) {
   }
 
   const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, MAX_WIDTH / bitmap.width)
+  const scale = Math.min(TARGET_SIZE / bitmap.width, TARGET_SIZE / bitmap.height, 1)
   const width = Math.max(1, Math.round(bitmap.width * scale))
   const height = Math.max(1, Math.round(bitmap.height * scale))
 
   const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
+  canvas.width = TARGET_SIZE
+  canvas.height = TARGET_SIZE
   const ctx = canvas.getContext('2d')
   if (!ctx) {
     bitmap.close()
     return file
   }
 
-  ctx.drawImage(bitmap, 0, 0, width, height)
+  ctx.clearRect(0, 0, TARGET_SIZE, TARGET_SIZE)
+  ctx.drawImage(bitmap, (TARGET_SIZE - width) / 2, (TARGET_SIZE - height) / 2, width, height)
   bitmap.close()
 
   const blob = await new Promise((resolve, reject) => {

@@ -429,7 +429,7 @@ export default function ProductEditorPage() {
 
       <Panel
         title="Fotos e ângulos"
-        description="Prefira enviar do celular ou do computador — as fotos ficam salvas na nuvem da loja (Supabase), já redimensionadas para carregar rápido. A primeira foto é a capa."
+        description="Envie fotos quadradas (ideal 1600×1600 px). O sistema centraliza e preserva a chuteira inteira — sem recorte. A primeira foto é a capa."
         actions={
           <>
             <input

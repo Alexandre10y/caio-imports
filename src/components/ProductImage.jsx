@@ -5,8 +5,9 @@ export default function ProductImage({
   width = 900,
   alt = '',
   loading = 'lazy',
-  className,
+  className = '',
   style,
+  fit = 'contain',
 }) {
   const optimized = productImageSrc(src, { width })
 
@@ -15,7 +16,7 @@ export default function ProductImage({
       src={optimized}
       alt={alt}
       loading={loading}
-      className={className}
+      className={`product-image product-image--${fit}${className ? ` ${className}` : ''}`}
       style={style}
       onError={(event) => {
         const img = event.currentTarget
