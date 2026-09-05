@@ -8,7 +8,7 @@ export function isHostedProductImage(url) {
 
 /**
  * Versão mais leve para cards e vitrine (transformação do Supabase Storage).
- * Se a URL não for do nosso bucket, devolve o endereço original.
+ * Sempre usa resize=contain para nunca cortar a chuteira.
  */
 export function productImageSrc(url, { width = 900, quality = 78 } = {}) {
   if (!url || !isHostedProductImage(url)) return url
@@ -22,7 +22,10 @@ export function productImageSrc(url, { width = 900, quality = 78 } = {}) {
     const objectPath = parsed.pathname.slice(index + marker.length)
     const renderPath = `/storage/v1/render/image/public/${PRODUCT_BUCKET}/${objectPath}`
     const renderUrl = new URL(renderPath, parsed.origin)
-    renderUrl.searchParams.set('width', String(width))
+    const size = Math.max(1, Math.round(width))
+    renderUrl.searchParams.set('width', String(size))
+    renderUrl.searchParams.set('height', String(size))
+    renderUrl.searchParams.set('resize', 'contain')
     renderUrl.searchParams.set('quality', String(quality))
     return renderUrl.toString()
   } catch {

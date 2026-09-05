@@ -824,6 +824,8 @@ a {
   justify-content: center;
   min-height: 280px;
   aspect-ratio: 1 / 1;
+  padding: 8%;
+  box-sizing: border-box;
   background: var(--surface);
 }
 
@@ -1017,7 +1019,7 @@ a {
 .pdp-thumb {
   width: 76px;
   height: 76px;
-  padding: 4px;
+  padding: 8px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -1025,6 +1027,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .pdp-thumb .product-image {
@@ -1045,28 +1048,40 @@ a {
 
 .pdp-stage {
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: min(100%, 640px);
+}
+
+.pdp-stage__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6%;
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--surface);
   clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1 / 1;
-  max-height: min(68vh, 640px);
+  box-sizing: border-box;
 }
 
-.pdp-stage .product-image {
+.pdp-stage__frame .product-image {
   width: 100%;
   height: 100%;
   max-width: 100%;
-  max-height: min(68vh, 640px);
+  max-height: 100%;
   object-fit: contain;
   object-position: center;
 }
 
 .pdp-stage figcaption {
-  padding: 12px 16px;
+  padding: 12px 4px 0;
   font-family: Syne, sans-serif;
   font-size: 0.72rem;
   letter-spacing: 0.18em;
@@ -1330,11 +1345,12 @@ a {
   .pdp-stage {
     order: 1;
     min-width: 0;
-    max-width: 100%;
+    max-width: min(100%, 420px);
+    margin-inline: auto;
   }
 
-  .pdp-stage .product-image {
-    max-height: min(46vh, 380px);
+  .pdp-stage__frame {
+    padding: 5%;
   }
 
   .pdp-info {

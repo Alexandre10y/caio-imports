@@ -76,12 +76,14 @@ export default function ProductPage() {
           </div>
 
           <figure className="pdp-stage">
-            <ProductImage
-              src={activeImage.src}
-              width={1400}
-              alt={`${product.brand} ${product.model} — ${activeImage.label}`}
-              style={{ filter: color?.filter }}
-            />
+            <div className="pdp-stage__frame">
+              <ProductImage
+                src={activeImage.src}
+                width={1600}
+                alt={`${product.brand} ${product.model} — ${activeImage.label}`}
+                style={{ filter: color?.filter }}
+              />
+            </div>
             <figcaption>{activeImage.label}</figcaption>
           </figure>
         </div>
