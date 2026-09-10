@@ -2,9 +2,9 @@ import { supabase } from './supabase'
 
 export const MODALITIES = ['Society', 'Campo', 'Futsal']
 export const SIZE_RANGE = Array.from({ length: 14 }, (_, index) => 33 + index)
-export const FALLBACK_COLOR = { name: 'Padrão', hex: '#C8FF00', filter: '' }
+export const FALLBACK_COLOR = { name: 'Padrão', hex: '#C8FF00' }
 
-const PRODUCT_SELECT = '*, product_images(id, url, label, position)'
+const PRODUCT_SELECT = '*, product_images(id, url, label, position, color_name)'
 
 export function normalizeColors(raw) {
   const list = Array.isArray(raw) ? raw : []
@@ -13,17 +13,52 @@ export function normalizeColors(raw) {
     .map((item) => ({
       name: item.name || 'Cor',
       hex: item.hex || '#C8FF00',
-      filter: item.filter || '',
     }))
   return clean.length > 0 ? clean : [FALLBACK_COLOR]
+}
+
+export function imagesForColor(product, colorName) {
+  const images = product?.images ?? []
+  if (images.length === 0) return []
+
+  const needle = (colorName || '').trim().toLowerCase()
+  const matched = needle
+    ? images.filter((image) => (image.colorName || '').trim().toLowerCase() === needle)
+    : []
+
+  if (matched.length > 0) return matched
+
+  // Fallback: primeira cor que tiver fotos, senão a galeria inteira.
+  for (const color of product?.colors ?? []) {
+    const name = (color.name || '').trim().toLowerCase()
+    if (!name) continue
+    const group = images.filter((image) => (image.colorName || '').trim().toLowerCase() === name)
+    if (group.length > 0) return group
+  }
+
+  return images
+}
+
+export function coverForColor(product, colorName) {
+  return imagesForColor(product, colorName)[0]?.src || product?.image || ''
 }
 
 export function mapProductRow(row) {
   const images = [...(row.product_images ?? [])]
     .sort((a, b) => a.position - b.position)
-    .map((item) => ({ id: item.id, src: item.url, label: item.label || 'Ângulo' }))
+    .map((item) => ({
+      id: item.id,
+      src: item.url,
+      label: item.label || 'Ângulo',
+      colorName: item.color_name || '',
+    }))
 
-  const cover = row.cover_image || images[0]?.src || ''
+  const colors = normalizeColors(row.colors)
+  const defaultGallery = imagesForColor(
+    { images, colors },
+    colors[0]?.name,
+  )
+  const cover = row.cover_image || defaultGallery[0]?.src || images[0]?.src || ''
   const sizes = [...(row.sizes ?? [])].sort((a, b) => a - b)
 
   return {
@@ -38,9 +73,9 @@ export function mapProductRow(row) {
     description: row.description ?? '',
     specs: row.specs ?? {},
     sizes: sizes.length > 0 ? sizes : [40],
-    colors: normalizeColors(row.colors),
+    colors,
     image: cover,
-    images: images.length > 0 ? images : [{ src: cover, label: 'Frontal' }],
+    images: images.length > 0 ? images : cover ? [{ src: cover, label: 'Frontal', colorName: colors[0]?.name || '' }] : [],
     stock: row.stock ?? 0,
     featured: Boolean(row.featured),
     active: Boolean(row.active),

@@ -5,7 +5,7 @@ import ProductCard from '../components/ProductCard'
 import ProductImage from '../components/ProductImage'
 import { WhatsAppIcon } from '../components/icons/BrandIcons'
 import { useCatalog } from '../hooks/useCatalog'
-import { getSimilar, trackProductEvent } from '../lib/catalog'
+import { getSimilar, imagesForColor, trackProductEvent } from '../lib/catalog'
 import { buildWhatsAppLink, formatBRL } from '../lib/format'
 
 export default function ProductPage() {
@@ -32,6 +32,15 @@ export default function ProductPage() {
     if (product?.dbId) trackProductEvent(product.dbId, 'view')
   }, [product?.dbId])
 
+  const gallery = useMemo(
+    () => (product ? imagesForColor(product, color?.name) : []),
+    [product, color?.name],
+  )
+
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [color?.name])
+
   if (!product) {
     if (loading) {
       return (
@@ -43,7 +52,7 @@ export default function ProductPage() {
     return <Navigate to="/" replace />
   }
 
-  const activeImage = product.images[activeIndex] ?? product.images[0]
+  const activeImage = gallery[activeIndex] ?? gallery[0]
   const whatsappHref = buildWhatsAppLink({
     model: product.model,
     color: color?.name ?? product.colors[0].name,
@@ -61,7 +70,7 @@ export default function ProductPage() {
       <div className="pdp-layout">
         <div className="pdp-gallery">
           <div className="pdp-thumbs" role="list">
-            {product.images.map((shot, index) => (
+            {gallery.map((shot, index) => (
               <button
                 key={`${shot.src}-${shot.label}-${index}`}
                 type="button"
@@ -77,14 +86,15 @@ export default function ProductPage() {
 
           <figure className="pdp-stage">
             <div className="pdp-stage__frame">
-              <ProductImage
-                src={activeImage.src}
-                width={1600}
-                alt={`${product.brand} ${product.model} — ${activeImage.label}`}
-                style={{ filter: color?.filter }}
-              />
+              {activeImage ? (
+                <ProductImage
+                  src={activeImage.src}
+                  width={1600}
+                  alt={`${product.brand} ${product.model} — ${activeImage.label}`}
+                />
+              ) : null}
             </div>
-            <figcaption>{activeImage.label}</figcaption>
+            <figcaption>{activeImage?.label ?? 'Foto'}</figcaption>
           </figure>
         </div>
 

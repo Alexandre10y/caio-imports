@@ -9,7 +9,7 @@ export { fetchAllProducts }
 export async function fetchProductById(id) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_images(id, url, label, position)')
+    .select('*, product_images(id, url, label, position, color_name)')
     .eq('id', id)
     .maybeSingle()
 
@@ -18,6 +18,14 @@ export async function fetchProductById(id) {
 }
 
 function productPayload(values) {
+  const colors = (values.colors ?? [])
+    .filter((color) => color?.name?.trim())
+    .map((color) => ({
+      name: color.name.trim(),
+      hex: color.hex || '#C8FF00',
+    }))
+
+  const flatImages = flattenColorImages(values.colors)
   return {
     slug: values.slug,
     model: values.model.trim(),
@@ -28,13 +36,32 @@ function productPayload(values) {
     description: values.description ?? '',
     specs: values.specs ?? {},
     sizes: values.sizes ?? [],
-    colors: values.colors ?? [],
+    colors,
     stock: Number(values.stock) || 0,
     featured: Boolean(values.featured),
     active: Boolean(values.active),
     position: Number(values.position) || 0,
-    cover_image: values.images?.[0]?.url ?? null,
+    cover_image: flatImages[0]?.url ?? null,
   }
+}
+
+/** Achata as galerias por cor em uma lista ordenada para gravar no banco. */
+export function flattenColorImages(colors = []) {
+  const gallery = []
+  colors.forEach((color) => {
+    const colorName = color?.name?.trim()
+    if (!colorName) return
+    const images = Array.isArray(color.images) ? color.images : []
+    images.forEach((image) => {
+      if (!image?.url?.trim()) return
+      gallery.push({
+        url: image.url.trim(),
+        label: image.label?.trim() || 'Ângulo',
+        color_name: colorName,
+      })
+    })
+  })
+  return gallery
 }
 
 export async function saveProduct({ id, values }) {
@@ -50,21 +77,20 @@ export async function saveProduct({ id, values }) {
     productId = data.id
   }
 
-  // A galeria é reescrita inteira: garante ordem e rótulos sem linhas órfãs.
+  // A galeria é reescrita inteira: garante ordem, cor e rótulos sem linhas órfãs.
   const { error: clearError } = await supabase
     .from('product_images')
     .delete()
     .eq('product_id', productId)
   if (clearError) throw clearError
 
-  const gallery = (values.images ?? [])
-    .filter((image) => image.url?.trim())
-    .map((image, index) => ({
-      product_id: productId,
-      url: image.url.trim(),
-      label: image.label?.trim() || `Ângulo ${index + 1}`,
-      position: index,
-    }))
+  const gallery = flattenColorImages(values.colors).map((image, index) => ({
+    product_id: productId,
+    url: image.url,
+    label: image.label || `Ângulo ${index + 1}`,
+    position: index,
+    color_name: image.color_name,
+  }))
 
   if (gallery.length > 0) {
     const { error } = await supabase.from('product_images').insert(gallery)

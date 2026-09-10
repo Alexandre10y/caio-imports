@@ -8,6 +8,12 @@ import { fetchProductById, saveProduct, uploadProductImage } from '../api'
 import { formatBytes } from '../../lib/imageOptimize'
 import { Feedback, Field, Panel, Spinner } from '../components/ui'
 
+const EMPTY_COLOR = () => ({
+  name: '',
+  hex: '#C8FF00',
+  images: [{ url: '', label: 'Frontal' }],
+})
+
 const EMPTY = {
   slug: '',
   model: '',
@@ -25,19 +31,49 @@ const EMPTY = {
     { key: 'origem', value: 'Importada' },
   ],
   sizes: [38, 39, 40, 41, 42, 43, 44],
-  colors: [{ name: '', hex: '#C8FF00', filter: '' }],
-  images: [{ url: '', label: 'Frontal' }],
+  colors: [EMPTY_COLOR()],
   active: true,
   featured: false,
 }
 
 const IMAGE_LABELS = ['Frontal', 'Lateral', 'Solado', 'Detalhe', 'Em campo']
 
+function colorsFromProduct(product) {
+  const images = product.images ?? []
+  const colors = (product.colors ?? []).map((color) => {
+    const name = color.name || ''
+    const needle = name.trim().toLowerCase()
+    const matched = images
+      .filter((image) => (image.colorName || '').trim().toLowerCase() === needle)
+      .map((image) => ({ url: image.src, label: image.label || 'Ângulo' }))
+
+    // Produtos antigos: se a cor não tem fotos, mas nenhuma imagem tem colorName, joga tudo na 1ª.
+    return {
+      name,
+      hex: color.hex || '#C8FF00',
+      images: matched.length > 0 ? matched : [{ url: '', label: 'Frontal' }],
+    }
+  })
+
+  if (colors.length === 0) return [EMPTY_COLOR()]
+
+  const anyLinked = images.some((image) => image.colorName?.trim())
+  if (!anyLinked && images.length > 0) {
+    colors[0] = {
+      ...colors[0],
+      images: images.map((image) => ({ url: image.src, label: image.label || 'Ângulo' })),
+    }
+  }
+
+  return colors
+}
+
 export default function ProductEditorPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { reload: reloadStorefront } = useCatalog()
   const fileInput = useRef(null)
+  const uploadColorIndex = useRef(0)
   const [values, setValues] = useState(EMPTY)
   const [loading, setLoading] = useState(Boolean(id))
   const [saving, setSaving] = useState(false)
@@ -66,8 +102,7 @@ export default function ProductEditorPage() {
         description: product.description,
         specs: Object.entries(product.specs ?? {}).map(([key, value]) => ({ key, value })),
         sizes: product.sizes,
-        colors: product.colors,
-        images: product.images.map((image) => ({ url: image.src, label: image.label })),
+        colors: colorsFromProduct(product),
         active: product.active,
         featured: product.featured,
       })
@@ -108,17 +143,58 @@ export default function ProductEditorPage() {
     patch({ [key]: values[key].filter((_, position) => position !== index) })
   }
 
-  function moveImage(index, direction) {
-    const target = index + direction
-    if (target < 0 || target >= values.images.length) return
-    const list = [...values.images]
-    ;[list[index], list[target]] = [list[target], list[index]]
-    patch({ images: list })
+  function updateColor(index, next) {
+    updateList('colors', index, next)
+  }
+
+  function updateColorImage(colorIndex, imageIndex, next) {
+    const colors = [...values.colors]
+    const images = [...(colors[colorIndex].images ?? [])]
+    images[imageIndex] = { ...images[imageIndex], ...next }
+    colors[colorIndex] = { ...colors[colorIndex], images }
+    patch({ colors })
+  }
+
+  function removeColorImage(colorIndex, imageIndex) {
+    const colors = [...values.colors]
+    const images = (colors[colorIndex].images ?? []).filter((_, i) => i !== imageIndex)
+    colors[colorIndex] = {
+      ...colors[colorIndex],
+      images: images.length > 0 ? images : [{ url: '', label: 'Frontal' }],
+    }
+    patch({ colors })
+  }
+
+  function moveColorImage(colorIndex, imageIndex, direction) {
+    const target = imageIndex + direction
+    const colors = [...values.colors]
+    const images = [...(colors[colorIndex].images ?? [])]
+    if (target < 0 || target >= images.length) return
+    ;[images[imageIndex], images[target]] = [images[target], images[imageIndex]]
+    colors[colorIndex] = { ...colors[colorIndex], images }
+    patch({ colors })
+  }
+
+  function addColorImage(colorIndex) {
+    const colors = [...values.colors]
+    const images = [...(colors[colorIndex].images ?? [])]
+    const label = IMAGE_LABELS[images.length] ?? 'Detalhe'
+    colors[colorIndex] = {
+      ...colors[colorIndex],
+      images: [...images, { url: '', label }],
+    }
+    patch({ colors })
+  }
+
+  function triggerUpload(colorIndex) {
+    uploadColorIndex.current = colorIndex
+    fileInput.current?.click()
   }
 
   async function handleUpload(event) {
     const files = [...(event.target.files ?? [])]
     if (files.length === 0) return
+    const colorIndex = uploadColorIndex.current
 
     setUploading(true)
     setFeedback(null)
@@ -126,17 +202,31 @@ export default function ProductEditorPage() {
       const slug = values.slug || slugify(values.model) || 'novo-produto'
       const uploaded = []
       let savedBytes = 0
+      const existingCount = (values.colors[colorIndex]?.images ?? []).filter((image) =>
+        image.url.trim(),
+      ).length
+
       for (const file of files) {
         const result = await uploadProductImage(file, slug)
-        uploaded.push({ url: result.url, label: IMAGE_LABELS[uploaded.length] ?? 'Detalhe' })
+        uploaded.push({
+          url: result.url,
+          label: IMAGE_LABELS[existingCount + uploaded.length] ?? 'Detalhe',
+        })
         savedBytes += Math.max(0, result.originalBytes - result.bytes)
       }
-      const existing = values.images.filter((image) => image.url.trim())
-      patch({ images: [...existing, ...uploaded] })
+
+      const colors = [...values.colors]
+      const existing = (colors[colorIndex].images ?? []).filter((image) => image.url.trim())
+      colors[colorIndex] = {
+        ...colors[colorIndex],
+        images: [...existing, ...uploaded],
+      }
+      patch({ colors })
+
       const savedLabel = savedBytes > 0 ? ` · ${formatBytes(savedBytes)} a menos por foto` : ''
       setFeedback({
         type: 'success',
-        message: `${uploaded.length} foto(s) na nuvem da loja, já otimizadas${savedLabel}.`,
+        message: `${uploaded.length} foto(s) na cor atual, já otimizadas${savedLabel}.`,
       })
     } catch (error) {
       setFeedback({ type: 'error', message: `Falha no upload: ${error.message}` })
@@ -149,19 +239,30 @@ export default function ProductEditorPage() {
   async function handleSubmit(event) {
     event.preventDefault()
 
-    const images = values.images.filter((image) => image.url.trim())
-    if (images.length === 0) {
-      setFeedback({ type: 'error', message: 'Adicione ao menos uma foto — a primeira é a capa.' })
-      return
-    }
     if (values.sizes.length === 0) {
       setFeedback({ type: 'error', message: 'Selecione as numerações disponíveis.' })
       return
     }
 
-    const colors = values.colors.filter((color) => color.name.trim())
+    const colors = values.colors
+      .map((color) => ({
+        name: color.name.trim(),
+        hex: color.hex || '#C8FF00',
+        images: (color.images ?? []).filter((image) => image.url.trim()),
+      }))
+      .filter((color) => color.name)
+
     if (colors.length === 0) {
-      setFeedback({ type: 'error', message: 'Informe ao menos uma cor.' })
+      setFeedback({ type: 'error', message: 'Informe ao menos uma cor com nome.' })
+      return
+    }
+
+    const missingPhotos = colors.find((color) => color.images.length === 0)
+    if (missingPhotos) {
+      setFeedback({
+        type: 'error',
+        message: `A cor "${missingPhotos.name}" precisa de ao menos uma foto.`,
+      })
       return
     }
 
@@ -180,7 +281,6 @@ export default function ProductEditorPage() {
           slug: values.slug || slugify(values.model),
           specs,
           colors,
-          images,
         },
       })
       await reloadStorefront()
@@ -201,6 +301,15 @@ export default function ProductEditorPage() {
 
   return (
     <form className="ad-stack" onSubmit={handleSubmit}>
+      <input
+        ref={fileInput}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/avif"
+        multiple
+        hidden
+        onChange={handleUpload}
+      />
+
       <div className="ad-page-head">
         <Link to="/admin/produtos" className="ad-btn">
           <ArrowLeft size={16} />
@@ -380,124 +489,120 @@ export default function ProductEditorPage() {
       </Panel>
 
       <Panel
-        title="Cores"
-        description="O nome vai na mensagem do WhatsApp. O filtro é um ajuste visual opcional na foto."
+        title="Cores e fotos"
+        description="Cada cor tem sua própria galeria (ideal ~4 ângulos em 1600×1600). Na loja, ao clicar na cor, as fotos mudam. A primeira foto da primeira cor é a capa da vitrine."
       >
-        <div className="ad-repeater">
-          {values.colors.map((color, index) => (
-            <div key={index} className="ad-repeater__row ad-repeater__row--color">
-              <input
-                type="text"
-                value={color.name}
-                onChange={(event) => updateList('colors', index, { name: event.target.value })}
-                placeholder="Volt"
-              />
-              <input
-                type="color"
-                value={color.hex}
-                onChange={(event) => updateList('colors', index, { hex: event.target.value })}
-                aria-label="Cor"
-              />
-              <input
-                type="text"
-                value={color.filter}
-                onChange={(event) => updateList('colors', index, { filter: event.target.value })}
-                placeholder="saturate(1.1)"
-              />
-              <button
-                type="button"
-                className="ad-icon-btn ad-icon-btn--danger"
-                onClick={() => removeFromList('colors', index)}
-                aria-label="Remover cor"
-              >
-                <Trash2 size={15} />
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="ad-btn"
-            onClick={() =>
-              patch({ colors: [...values.colors, { name: '', hex: '#C8FF00', filter: '' }] })
-            }
-          >
-            <Plus size={15} />
-            Nova cor
-          </button>
-        </div>
-      </Panel>
-
-      <Panel
-        title="Fotos e ângulos"
-        description="Envie fotos quadradas (ideal 1600×1600 px). O sistema centraliza e preserva a chuteira inteira — sem recorte. A primeira foto é a capa."
-        actions={
-          <>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              multiple
-              hidden
-              onChange={handleUpload}
-            />
-            <button
-              type="button"
-              className="ad-btn ad-btn--primary"
-              onClick={() => fileInput.current?.click()}
-              disabled={uploading}
-            >
-              <Upload size={15} />
-              {uploading ? 'Enviando…' : 'Enviar fotos'}
-            </button>
-          </>
-        }
-      >
-        <div className="ad-images">
-          {values.images.map((image, index) => (
-            <div key={index} className="ad-image-row">
-              <div className="ad-image-row__thumb">
-                {image.url ? <img src={image.url} alt="" loading="lazy" /> : <ImagePlus size={18} />}
-              </div>
-              <div className="ad-image-row__fields">
-                <input
-                  type="url"
-                  value={image.url}
-                  onChange={(event) => updateList('images', index, { url: event.target.value })}
-                  placeholder="Link externo (opcional)"
-                />
+        <div className="ad-color-blocks">
+          {values.colors.map((color, colorIndex) => (
+            <div key={colorIndex} className="ad-color-block">
+              <div className="ad-color-block__head">
                 <input
                   type="text"
-                  value={image.label}
-                  onChange={(event) => updateList('images', index, { label: event.target.value })}
-                  placeholder="Lateral"
+                  value={color.name}
+                  onChange={(event) => updateColor(colorIndex, { name: event.target.value })}
+                  placeholder="Nome da cor (ex.: Roxo)"
+                  aria-label="Nome da cor"
                 />
-              </div>
-              <div className="ad-image-row__actions">
-                {index === 0 ? <span className="ad-tag">Capa</span> : null}
-                <button
-                  type="button"
-                  className="ad-icon-btn"
-                  onClick={() => moveImage(index, -1)}
-                  aria-label="Subir foto"
-                >
-                  <ChevronUp size={15} />
-                </button>
-                <button
-                  type="button"
-                  className="ad-icon-btn"
-                  onClick={() => moveImage(index, 1)}
-                  aria-label="Descer foto"
-                >
-                  <ChevronDown size={15} />
-                </button>
+                <input
+                  type="color"
+                  value={color.hex}
+                  onChange={(event) => updateColor(colorIndex, { hex: event.target.value })}
+                  aria-label="Hex da cor"
+                />
+                {colorIndex === 0 ? <span className="ad-tag">Cor principal</span> : null}
                 <button
                   type="button"
                   className="ad-icon-btn ad-icon-btn--danger"
-                  onClick={() => removeFromList('images', index)}
-                  aria-label="Remover foto"
+                  onClick={() => {
+                    if (values.colors.length <= 1) {
+                      setFeedback({ type: 'error', message: 'Mantenha ao menos uma cor.' })
+                      return
+                    }
+                    removeFromList('colors', colorIndex)
+                  }}
+                  aria-label="Remover cor"
                 >
                   <Trash2 size={15} />
                 </button>
+              </div>
+
+              <div className="ad-color-block__actions">
+                <button
+                  type="button"
+                  className="ad-btn ad-btn--primary"
+                  onClick={() => triggerUpload(colorIndex)}
+                  disabled={uploading}
+                >
+                  <Upload size={15} />
+                  {uploading && uploadColorIndex.current === colorIndex
+                    ? 'Enviando…'
+                    : 'Enviar fotos desta cor'}
+                </button>
+                <button type="button" className="ad-btn" onClick={() => addColorImage(colorIndex)}>
+                  <Plus size={15} />
+                  Link externo
+                </button>
+              </div>
+
+              <div className="ad-images">
+                {(color.images ?? []).map((image, imageIndex) => (
+                  <div key={imageIndex} className="ad-image-row">
+                    <div className="ad-image-row__thumb">
+                      {image.url ? (
+                        <img src={image.url} alt="" loading="lazy" />
+                      ) : (
+                        <ImagePlus size={18} />
+                      )}
+                    </div>
+                    <div className="ad-image-row__fields">
+                      <input
+                        type="url"
+                        value={image.url}
+                        onChange={(event) =>
+                          updateColorImage(colorIndex, imageIndex, { url: event.target.value })
+                        }
+                        placeholder="Link da foto ou envie pelo botão acima"
+                      />
+                      <input
+                        type="text"
+                        value={image.label}
+                        onChange={(event) =>
+                          updateColorImage(colorIndex, imageIndex, { label: event.target.value })
+                        }
+                        placeholder="Frontal"
+                      />
+                    </div>
+                    <div className="ad-image-row__actions">
+                      {colorIndex === 0 && imageIndex === 0 ? (
+                        <span className="ad-tag">Capa</span>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="ad-icon-btn"
+                        onClick={() => moveColorImage(colorIndex, imageIndex, -1)}
+                        aria-label="Subir foto"
+                      >
+                        <ChevronUp size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="ad-icon-btn"
+                        onClick={() => moveColorImage(colorIndex, imageIndex, 1)}
+                        aria-label="Descer foto"
+                      >
+                        <ChevronDown size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="ad-icon-btn ad-icon-btn--danger"
+                        onClick={() => removeColorImage(colorIndex, imageIndex)}
+                        aria-label="Remover foto"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
@@ -506,10 +611,10 @@ export default function ProductEditorPage() {
         <button
           type="button"
           className="ad-btn"
-          onClick={() => patch({ images: [...values.images, { url: '', label: 'Detalhe' }] })}
+          onClick={() => patch({ colors: [...values.colors, EMPTY_COLOR()] })}
         >
           <Plus size={15} />
-          Usar link externo
+          Nova cor com fotos
         </button>
       </Panel>
 

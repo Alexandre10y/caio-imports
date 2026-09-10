@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCatalog } from '../hooks/useCatalog'
-import { trackProductEvent } from '../lib/catalog'
+import { coverForColor, trackProductEvent } from '../lib/catalog'
 import { buildWhatsAppLink, formatBRL } from '../lib/format'
 import { WhatsAppIcon } from './icons/BrandIcons'
 import ProductImage from './ProductImage'
@@ -10,6 +10,7 @@ export default function ProductCard({ product, index, featured = false }) {
   const { whatsapp } = useCatalog()
   const [size, setSize] = useState(product.sizes[Math.floor(product.sizes.length / 2)])
   const [color, setColor] = useState(product.colors[0])
+  const coverSrc = coverForColor(product, color?.name)
 
   const whatsappHref = useMemo(
     () =>
@@ -27,11 +28,10 @@ export default function ProductCard({ product, index, featured = false }) {
       <Link to={`/chuteira/${product.id}`} className="product-card__media" aria-label={`Ver ${product.model}`}>
         <div className="product-card__visual">
           <ProductImage
-            src={product.image}
+            src={coverSrc}
             width={featured ? 1200 : 800}
             alt={`${product.brand} ${product.model}`}
             loading={featured ? 'eager' : 'lazy'}
-            style={{ filter: color?.filter }}
           />
           <span className="product-card__stamp">{product.brand}</span>
           <span className="product-card__mod">{product.modality}</span>

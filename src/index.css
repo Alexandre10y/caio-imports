@@ -611,14 +611,14 @@ a {
 
 .hero__stack {
   position: relative;
-  width: min(520px, 100%);
-  height: 430px;
+  width: min(560px, 100%);
+  height: 480px;
   margin-left: auto;
 }
 
 .hero-shot {
   position: absolute;
-  width: 58%;
+  width: 55%;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: var(--shadow);
@@ -630,41 +630,41 @@ a {
 
 .hero-shot img {
   width: 100%;
-  height: 260px;
+  height: 240px;
   object-fit: cover;
 }
 
 .hero-shot--0 {
-  top: 18px;
-  left: 0;
+  top: 8px;
+  left: -2%;
   z-index: 2;
-  transform: rotate(-8deg);
+  transform: rotate(-5deg);
 }
 
 .hero-shot--1 {
-  top: 70px;
-  right: 0;
+  top: 48px;
+  right: -2%;
   z-index: 3;
-  transform: rotate(7deg);
+  transform: rotate(5deg);
 }
 
 .hero-shot--2 {
-  bottom: 18px;
-  left: 18%;
-  z-index: 1;
-  width: 48%;
-  transform: rotate(3deg);
+  bottom: 12px;
+  left: 22%;
+  z-index: 4;
+  width: 54%;
+  transform: rotate(2deg);
 }
 
 .hero-shot--2 img {
-  height: 180px;
+  height: 230px;
 }
 
 .hero-badge {
   position: absolute;
   right: 8px;
   bottom: 36px;
-  z-index: 4;
+  z-index: 5;
   display: grid;
   gap: 4px;
   padding: 12px 14px;
@@ -1303,7 +1303,7 @@ a {
   }
 
   .hero__stack {
-    height: 360px;
+    height: 400px;
     margin: 0 auto;
   }
 
@@ -1370,11 +1370,11 @@ a {
 
   .hero-shot img,
   .hero-shot--2 img {
-    height: 150px;
+    height: 170px;
   }
 
   .hero__stack {
-    height: 300px;
+    height: 340px;
   }
 
   .vitrine,

@@ -65,7 +65,7 @@ src/
 | Tabela | Função |
 | --- | --- |
 | `products` | catálogo: preço, custo, estoque, especificações, numerações, cores |
-| `product_images` | galeria de ângulos, ordenada; a primeira foto é a capa |
+| `product_images` | galeria de ângulos por cor (`color_name`), ordenada; a primeira foto da primeira cor é a capa |
 | `sales` | vendas lançadas manualmente, com total e lucro calculados pelo Postgres |
 | `site_content` | textos editáveis de cada seção da loja |
 | `product_events` | cliques no WhatsApp e visitas, para o painel de interesse |
