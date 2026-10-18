@@ -8,6 +8,7 @@ import { useCatalog } from './hooks/useCatalog'
 import { useTheme } from './hooks/useTheme'
 import HomePage from './pages/HomePage'
 import ProductPage from './pages/ProductPage'
+import RegionPage from './pages/RegionPage'
 
 // O painel só é baixado quando alguém abre /admin — a loja continua leve.
 const AdminApp = lazy(() => import('./admin/AdminApp'))
@@ -95,11 +96,13 @@ function Storefront() {
               products={filtered}
               modality={modality}
               brand={brand}
+              filterKey={`${query}|${price.min}|${price.max}`}
               onModalityChange={setModality}
               onBrandChange={setBrand}
             />
           }
         />
+        <Route path="/chuteiras-na-regiao" element={<RegionPage />} />
         <Route path="/chuteira/:id" element={<ProductPage />} />
       </Routes>
       <Footer />

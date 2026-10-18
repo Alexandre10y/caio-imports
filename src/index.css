@@ -740,7 +740,8 @@ a {
 .guarantee,
 .site-footer,
 .pdp,
-.guide {
+.guide,
+.region {
   position: relative;
   max-width: 1280px;
   margin: 0 auto;
@@ -787,6 +788,9 @@ a {
   min-width: 42px;
   height: 42px;
   padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--chip-bg);
@@ -815,6 +819,91 @@ a {
   min-width: 1.25rem;
   color: var(--muted);
   text-align: center;
+}
+
+.vitrine-region,
+.site-footer__region,
+.drawer__region {
+  color: var(--volt);
+}
+
+.vitrine-region {
+  display: inline-block;
+  margin-top: 18px;
+  font-size: 0.92rem;
+}
+
+.site-footer__region {
+  display: inline-block;
+  margin-top: 18px;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.drawer__region {
+  display: inline-flex;
+  margin-top: 22px;
+  font-size: 0.95rem;
+}
+
+.region-lead {
+  max-width: 68ch;
+  margin: 18px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.region-actions {
+  margin-top: 28px;
+}
+
+.region-block {
+  margin-top: 56px;
+}
+
+.region-block h2 {
+  margin: 0 0 18px;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+
+.region-index {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.region-index a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.region-index a:hover {
+  border-color: var(--volt);
+  color: var(--volt);
+}
+
+.region-index span {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 800px) {
+  .region-index {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .section-head {
@@ -1449,7 +1538,8 @@ a {
   .guarantee,
   .site-footer,
   .pdp,
-  .guide {
+  .guide,
+  .region {
     padding: 52px 16px;
     overflow-x: clip;
   }
@@ -1474,6 +1564,10 @@ a {
 
   .vitrine-pager__controls {
     justify-content: center;
+  }
+
+  .region-index {
+    grid-template-columns: 1fr;
   }
 
   .pdp-info {

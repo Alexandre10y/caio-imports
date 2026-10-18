@@ -5,14 +5,35 @@ import ProductCard from '../components/ProductCard'
 import ProductImage from '../components/ProductImage'
 import { WhatsAppIcon } from '../components/icons/BrandIcons'
 import { useCatalog } from '../hooks/useCatalog'
+import { usePageMeta } from '../hooks/usePageMeta'
 import { getSimilar, imagesForColor, trackProductEvent } from '../lib/catalog'
 import { buildWhatsAppLink, formatBRL } from '../lib/format'
+import { HOME_DESCRIPTION, graphJsonLd, productJsonLd, storeJsonLd } from '../lib/localSeo'
 
 export default function ProductPage() {
   const { id } = useParams()
   const { products, loading, whatsapp } = useCatalog()
   const product = products.find((item) => item.id === id)
   const similar = useMemo(() => getSimilar(products, product), [product, products])
+  const jsonLd = useMemo(
+    () =>
+      graphJsonLd([
+        storeJsonLd({ phone: whatsapp, path: product ? `/chuteira/${product.id}` : '/' }),
+        product ? productJsonLd(product) : null,
+      ]),
+    [product, whatsapp],
+  )
+
+  usePageMeta({
+    title: product
+      ? `${product.brand} ${product.model} · Chuteira de ${product.modality} | CAIO IMPORTS`
+      : 'CAIO IMPORTS',
+    description: product
+      ? `Chuteira de ${product.modality.toLowerCase()} ${product.brand} ${product.model} na CAIO IMPORTS, para Laranjeiras do Sul e região. ${formatBRL(product.price)}.`
+      : HOME_DESCRIPTION,
+    path: product ? `/chuteira/${product.id}` : '/',
+    jsonLd,
+  })
   const [activeIndex, setActiveIndex] = useState(0)
   const [size, setSize] = useState(null)
   const [color, setColor] = useState(null)

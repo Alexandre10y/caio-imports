@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useCatalog } from '../hooks/useCatalog'
 import { MODALITIES } from '../lib/catalog'
+import { REGION_PATH } from '../lib/localSeo'
 import BlurText from './bits/BlurText'
 import ScrollReveal from './bits/ScrollReveal'
 import ProductCard from './ProductCard'
@@ -28,16 +30,18 @@ export default function ProductShowcase({
   products,
   modality,
   brand,
+  filterKey = '',
   onModalityChange,
   onBrandChange,
 }) {
-  const { brands, content } = useCatalog()
+  const { brands, content, loading } = useCatalog()
   const copy = content.showcase
-  const [page, setPage] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
   const featured = products.find((item) => item.featured) ?? products[0]
   const catalog = products.filter((item) => item.id !== featured?.id)
   const totalPages = Math.max(1, Math.ceil(catalog.length / PAGE_SIZE) || 1)
-  const safePage = Math.min(page, totalPages)
+  const requested = Math.max(1, Number(searchParams.get('pagina')) || 1)
+  const safePage = Math.min(requested, totalPages)
   const start = (safePage - 1) * PAGE_SIZE
   const rest = catalog.slice(start, start + PAGE_SIZE)
   const featuredOnPage = safePage === 1 && Boolean(featured)
@@ -45,16 +49,46 @@ export default function ProductShowcase({
   const shownTo = (featured ? 1 : 0) + start + rest.length
   const showPager = totalPages > 1
   const pages = pageWindow(safePage, totalPages)
-  const catalogKey = products.map((item) => item.id).join('|')
+  const skipFilterReset = useRef(true)
 
   useEffect(() => {
-    setPage(1)
-  }, [catalogKey])
+    if (skipFilterReset.current) {
+      skipFilterReset.current = false
+      return
+    }
+    setSearchParams(
+      (prev) => {
+        if (!prev.get('pagina')) return prev
+        const next = new URLSearchParams(prev)
+        next.delete('pagina')
+        return next
+      },
+      { replace: true },
+    )
+  }, [brand, filterKey, modality, setSearchParams])
 
-  function changePage(next) {
-    const target = Math.min(Math.max(next, 1), totalPages)
-    if (target === safePage) return
-    setPage(target)
+  useEffect(() => {
+    if (loading || requested <= totalPages) return
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (totalPages <= 1) next.delete('pagina')
+        else next.set('pagina', String(totalPages))
+        return next
+      },
+      { replace: true },
+    )
+  }, [loading, requested, setSearchParams, totalPages])
+
+  function pageHref(target) {
+    const params = new URLSearchParams(searchParams)
+    if (target <= 1) params.delete('pagina')
+    else params.set('pagina', String(target))
+    const search = params.toString()
+    return { pathname: '/', search: search ? `?${search}` : '', hash: 'vitrine' }
+  }
+
+  function scrollToVitrine() {
     window.requestAnimationFrame(() => {
       document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
@@ -141,43 +175,48 @@ export default function ProductShowcase({
             </p>
             {showPager ? (
               <div className="vitrine-pager__controls">
-                <button
-                  type="button"
-                  className="vitrine-pager__btn"
-                  onClick={() => changePage(safePage - 1)}
-                  disabled={safePage === 1}
-                >
-                  Anterior
-                </button>
+                {safePage === 1 ? (
+                  <button type="button" className="vitrine-pager__btn" disabled>
+                    Anterior
+                  </button>
+                ) : (
+                  <Link to={pageHref(safePage - 1)} className="vitrine-pager__btn" onClick={scrollToVitrine}>
+                    Anterior
+                  </Link>
+                )}
                 {pages.map((item, index) =>
                   item === 'gap' ? (
                     <span key={`gap-${index}`} className="vitrine-pager__gap" aria-hidden="true">
                       …
                     </span>
                   ) : (
-                    <button
+                    <Link
                       key={item}
-                      type="button"
+                      to={pageHref(item)}
                       className={`vitrine-pager__btn ${item === safePage ? 'is-active' : ''}`}
                       aria-label={`Página ${item}`}
                       aria-current={item === safePage ? 'page' : undefined}
-                      onClick={() => changePage(item)}
+                      onClick={scrollToVitrine}
                     >
                       {item}
-                    </button>
+                    </Link>
                   ),
                 )}
-                <button
-                  type="button"
-                  className="vitrine-pager__btn"
-                  onClick={() => changePage(safePage + 1)}
-                  disabled={safePage === totalPages}
-                >
-                  Próxima
-                </button>
+                {safePage === totalPages ? (
+                  <button type="button" className="vitrine-pager__btn" disabled>
+                    Próxima
+                  </button>
+                ) : (
+                  <Link to={pageHref(safePage + 1)} className="vitrine-pager__btn" onClick={scrollToVitrine}>
+                    Próxima
+                  </Link>
+                )}
               </div>
             ) : null}
           </nav>
+          <Link to={REGION_PATH} className="vitrine-region">
+            Chuteiras em Laranjeiras do Sul, Barreiro, Rio Bonito do Iguaçu e Marquinho
+          </Link>
         </>
       )}
     </section>

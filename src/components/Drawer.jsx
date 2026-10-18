@@ -1,5 +1,6 @@
 import { ChevronRight, Search, X } from 'lucide-react'
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useCatalog } from '../hooks/useCatalog'
 import { MODALITIES } from '../lib/catalog'
 import PriceFilter from './PriceFilter'
@@ -54,6 +55,10 @@ export default function Drawer({
             <X size={18} />
           </button>
         </div>
+
+        <Link to="/chuteiras-na-regiao" className="drawer__region" onClick={onClose}>
+          Chuteiras na região
+        </Link>
 
         <form
           className="search-bar search-bar--drawer flex md:hidden items-center gap-2"

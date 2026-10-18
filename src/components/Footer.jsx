@@ -14,6 +14,9 @@ export default function Footer() {
           <p className="kicker">{copy.kicker}</p>
           <h2>{copy.title}</h2>
           <p>{copy.text}</p>
+          <Link to="/chuteiras-na-regiao" className="site-footer__region">
+            Chuteiras em Laranjeiras do Sul e região
+          </Link>
         </div>
 
         <a
