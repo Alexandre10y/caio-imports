@@ -49,14 +49,16 @@ export default function ProductShowcase({
   const shownTo = (featured ? 1 : 0) + start + rest.length
   const showPager = totalPages > 1
   const pages = pageWindow(safePage, totalPages)
-  const skipFilterReset = useRef(true)
+  const setSearchParamsRef = useRef(setSearchParams)
+  const filterSignature = `${modality}|${brand}|${filterKey}`
+  const previousFilter = useRef(filterSignature)
+
+  setSearchParamsRef.current = setSearchParams
 
   useEffect(() => {
-    if (skipFilterReset.current) {
-      skipFilterReset.current = false
-      return
-    }
-    setSearchParams(
+    if (previousFilter.current === filterSignature) return
+    previousFilter.current = filterSignature
+    setSearchParamsRef.current(
       (prev) => {
         if (!prev.get('pagina')) return prev
         const next = new URLSearchParams(prev)
@@ -65,11 +67,11 @@ export default function ProductShowcase({
       },
       { replace: true },
     )
-  }, [brand, filterKey, modality, setSearchParams])
+  }, [filterSignature])
 
   useEffect(() => {
     if (loading || requested <= totalPages) return
-    setSearchParams(
+    setSearchParamsRef.current(
       (prev) => {
         const next = new URLSearchParams(prev)
         if (totalPages <= 1) next.delete('pagina')
@@ -78,7 +80,7 @@ export default function ProductShowcase({
       },
       { replace: true },
     )
-  }, [loading, requested, setSearchParams, totalPages])
+  }, [loading, requested, totalPages])
 
   function pageHref(target) {
     const params = new URLSearchParams(searchParams)
